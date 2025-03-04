@@ -58,7 +58,7 @@ public class FilmController {
     }
 
     @GetMapping("/director/{directorId}")
-    public Collection<Film> getDirectorFilms(@PathVariable("directorId") Long directorId, @RequestParam(value = "sortBy", defaultValue = "year") String sortBy) {
+    public Collection<Film> getDirectorFilms(@PathVariable("directorId") Long directorId, @RequestParam(value = "sortBy", defaultValue = "likes") String sortBy) {
         sortBy = sortBy.toLowerCase();
         sortBy = sortBy.replace("[", "");
         sortBy = sortBy.replace("]", "");
