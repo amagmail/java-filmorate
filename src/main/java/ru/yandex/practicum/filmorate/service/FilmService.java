@@ -55,4 +55,8 @@ public class FilmService {
         return filmStorage.getItem(filmId);
     }
 
+    public Collection<Film> getDirectorFilms(Long directorId, String sortBy) {
+        return filmStorage.getDirectorFilms(directorId, sortBy);
+    }
+
 }
