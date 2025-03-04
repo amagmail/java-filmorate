@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.film.mappers;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -50,6 +51,25 @@ public class FilmRowMapper implements RowMapper<Film> {
                     genres.add(genre);
                 }
                 film.setGenres(genres);
+            }
+        }
+
+        String directorIds = resultSet.getString("director_ids");
+        String directorNames = resultSet.getString("director_names");
+        if (directorIds != null && directorNames != null) {
+            String[] arrIds = directorIds.split(",");
+            String[] arrNames = directorNames.split(",");
+            if (arrIds.length == arrNames.length) {
+                Set<Director> directors = new HashSet<>();
+                for (int i = 0; i < arrIds.length; i++) {
+                    Director director = new Director();
+                    Long directorId = Long.valueOf(arrIds[i].trim());
+                    String directorName = arrNames[i].trim();
+                    director.setId(directorId);
+                    director.setName(directorName);
+                    directors.add(director);
+                }
+                film.setDirectors(directors);
             }
         }
 

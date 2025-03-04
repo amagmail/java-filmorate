@@ -14,4 +14,6 @@ public interface FilmStorage extends Storage<Film> {
 
     Collection<Film> getPopular(int count);
 
+    Collection<Film> getDirectorFilms(Long directorId, String sortBy);
+
 }
