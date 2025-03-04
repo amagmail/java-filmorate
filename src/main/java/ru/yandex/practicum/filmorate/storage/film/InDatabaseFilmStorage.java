@@ -7,6 +7,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -28,10 +29,14 @@ public class InDatabaseFilmStorage implements FilmStorage {
             "mpa.description as mpa_description, " +
             "string_agg(genres.id, ', ') as genre_ids, " +
             "string_agg(genres.name, ', ') as genre_names, " +
+            "string_agg(directors.id, ', ') as director_ids, " +
+            "string_agg(directors.name, ', ') as director_names, " +
             "(select count(user_id) from likes where film_id = films.id) as likes " +
             "from films " +
             "left join film_genre fg on fg.film_id = films.id " +
             "left join genres on genres.id = fg.genre_id " +
+            "left join film_director fd on fd.film_id = films.id " +
+            "left join directors on directors.id = fd.director_id " +
             "left join mpa on mpa.id = films.mpa";
 
     private static final String GET_ITEMS = BASE_DATA_QUERY + " group by films.id";
@@ -47,6 +52,9 @@ public class InDatabaseFilmStorage implements FilmStorage {
     private static final String SET_GENRE = "insert into film_genre(film_id, genre_id) values(?, ?)";
     private static final String REMOVE_GENRES = "delete from film_genre where film_id = ?";
 
+    private static final String SET_DIRECTOR = "insert into film_director(film_id, director_id) values(?, ?)";
+    private static final String REMOVE_DIRECTORS = "delete from film_director where film_id = ?";
+
     public InDatabaseFilmStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         this.jdbc = jdbc;
         this.mapper = mapper;
@@ -57,6 +65,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
         Long mpaId = getValidMpaId(entity.getMpa());
         Set<Long> genreIds = getValidGenreIds(entity.getGenres());
+        Set<Long> directorIds = getValidDirectorIds(entity.getDirectors());
 
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
@@ -74,6 +83,9 @@ public class InDatabaseFilmStorage implements FilmStorage {
             for (Long genreId : genreIds) {
                 jdbc.update(SET_GENRE, id, genreId);
             }
+            for (Long directorId : directorIds) {
+                jdbc.update(SET_DIRECTOR, id, directorId);
+            }
             return entity;
         } else {
             throw new InternalServerException("Не удалось сохранить данные");
@@ -85,12 +97,17 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
         Long mpaId = getValidMpaId(entity.getMpa());
         Set<Long> genreIds = getValidGenreIds(entity.getGenres());
+        Set<Long> directorIds = getValidDirectorIds(entity.getDirectors());
 
         int rowsUpdated = jdbc.update(UPDATE_ITEM, entity.getName(), entity.getDescription(), entity.getReleaseDate(), entity.getDuration(), mpaId, entity.getId());
         if (rowsUpdated > 0) {
             jdbc.update(REMOVE_GENRES, entity.getId());
             for (Long genreId : genreIds) {
                 jdbc.update(SET_GENRE, entity.getId(), genreId);
+            }
+            jdbc.update(REMOVE_DIRECTORS, entity.getId());
+            for (Long directorId : directorIds) {
+                jdbc.update(SET_DIRECTOR, entity.getId(), directorId);
             }
             return entity;
         } else {
@@ -161,6 +178,18 @@ public class InDatabaseFilmStorage implements FilmStorage {
             throw new NotFoundException("Не удалось найти жанры по идентификаторам");
         }
         return genreIds;
+    }
+
+    private Set<Long> getValidDirectorIds(Set<Director> directors) {
+        Set<Long> directorIds = new HashSet<>();
+        for (Director director : directors) {
+            directorIds.add(director.getId());
+        }
+        List<Long> checkVals = DatabaseUtils.getExistRows(jdbc, "genres", new ArrayList<>(directorIds));
+        if (checkVals.size() != directorIds.size()) {
+            throw new NotFoundException("Не удалось найти режиссера по идентификатору");
+        }
+        return directorIds;
     }
 
 }
