@@ -6,8 +6,7 @@ import org.springframework.http.HttpStatus;
 import ru.yandex.practicum.filmorate.model.Film;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -56,6 +55,15 @@ public class FilmController {
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilm) {
         return filmService.update(newFilm);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> getDirectorFilms(@PathVariable("directorId") Long directorId, @RequestParam(value = "sortBy", defaultValue = "[year,likes]") String sortBy) {
+        sortBy = sortBy.toLowerCase();
+        sortBy = sortBy.replace("[", "");
+        sortBy = sortBy.replace("]", "");
+        sortBy = sortBy.replace("year", "release_date");
+        return filmService.getDirectorFilms(directorId, sortBy);
     }
 
 }

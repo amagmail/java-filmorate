@@ -24,24 +24,29 @@ public class InDatabaseFilmStorage implements FilmStorage {
     private final JdbcTemplate jdbc;
     private final RowMapper<Film> mapper;
 
-    private static final String BASE_DATA_QUERY = "select films.*, " +
-            "mpa.name as mpa_name, " +
-            "mpa.description as mpa_description, " +
-            "string_agg(genres.id, ', ') as genre_ids, " +
-            "string_agg(genres.name, ', ') as genre_names, " +
+    private static final String BASE_DATA_QUERY = "select bs.*, " +
             "string_agg(directors.id, ', ') as director_ids, " +
-            "string_agg(directors.name, ', ') as director_names, " +
-            "(select count(user_id) from likes where film_id = films.id) as likes " +
-            "from films " +
-            "left join film_genre fg on fg.film_id = films.id " +
-            "left join genres on genres.id = fg.genre_id " +
-            "left join film_director fd on fd.film_id = films.id " +
-            "left join directors on directors.id = fd.director_id " +
-            "left join mpa on mpa.id = films.mpa";
+            "string_agg(directors.name, ', ') as director_names " +
+            "from ( " +
+                "select films.*, " +
+                "mpa.name as mpa_name, " +
+                "mpa.description as mpa_description, " +
+                "string_agg(genres.id, ', ') as genre_ids, " +
+                "string_agg(genres.name, ', ') as genre_names, " +
+                "(select count(user_id) from likes where film_id = films.id) as likes " +
+                "from films " +
+                "left join film_genre fg on fg.film_id = films.id " +
+                "left join genres on genres.id = fg.genre_id " +
+                "left join mpa on mpa.id = films.mpa " +
+                "group by films.id " +
+            ") bs " +
+            "left join film_director fd on fd.film_id = bs.id " +
+            "left join directors on directors.id = fd.director_id";
 
-    private static final String GET_ITEMS = BASE_DATA_QUERY + " group by films.id";
-    private static final String GET_ITEM = BASE_DATA_QUERY + " where films.id = ? group by films.id";
-    private static final String GET_POPULAR = BASE_DATA_QUERY + " group by films.id order by likes desc limit ?";
+    private static final String GET_ITEMS = BASE_DATA_QUERY + " group by bs.id";
+    private static final String GET_ITEM = BASE_DATA_QUERY + " where bs.id = ? group by bs.id";
+    private static final String GET_POPULAR = BASE_DATA_QUERY + " group by bs.id order by bs.likes desc limit ?";
+    private static final String GET_DIRECTOR_FILMS = BASE_DATA_QUERY + " where directors.id = ? group by bs.id";
     private static final String INSERT_ITEM = "insert into films(name, description, release_date, duration, mpa) values (?, ?, ?, ?, ?)";
     private static final String UPDATE_ITEM = "update films set name = ?, description = ?, release_date = ?, duration = ?, mpa = ? where id = ?";
 
@@ -146,6 +151,11 @@ public class InDatabaseFilmStorage implements FilmStorage {
     @Override
     public Collection<Film> getPopular(int count) {
         return jdbc.query(GET_POPULAR, mapper, count);
+    }
+
+    @Override
+    public Collection<Film> getDirectorFilms(Long directorId, String fields) {
+        return jdbc.query(GET_DIRECTOR_FILMS + " order by " + fields, mapper, directorId);
     }
 
     public Set<Long> getLikes(Long filmId) {
