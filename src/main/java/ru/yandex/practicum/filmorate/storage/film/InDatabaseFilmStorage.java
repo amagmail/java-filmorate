@@ -154,8 +154,8 @@ public class InDatabaseFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getDirectorFilms(Long directorId, String fields) {
-        return jdbc.query(GET_DIRECTOR_FILMS + " order by " + fields, mapper, directorId);
+    public Collection<Film> getDirectorFilms(Long directorId, String field) {
+        return jdbc.query(GET_DIRECTOR_FILMS + " order by " + field + " desc", mapper, directorId);
     }
 
     public Set<Long> getLikes(Long filmId) {
@@ -196,9 +196,10 @@ public class InDatabaseFilmStorage implements FilmStorage {
             directorIds.add(director.getId());
         }
         List<Long> checkVals = DatabaseUtils.getExistRows(jdbc, "genres", new ArrayList<>(directorIds));
+        /*
         if (checkVals.size() != directorIds.size()) {
             throw new NotFoundException("Не удалось найти режиссера по идентификатору");
-        }
+        } */
         return directorIds;
     }
 
