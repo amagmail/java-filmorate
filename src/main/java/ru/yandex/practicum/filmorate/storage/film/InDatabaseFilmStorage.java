@@ -155,7 +155,13 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getDirectorFilms(Long directorId, String field) {
-        return jdbc.query(GET_DIRECTOR_FILMS + " order by " + field + " desc", mapper, directorId);
+        if (field.equals("likes")) {
+            field += " desc";
+        }
+        if (field.equals("release_date")) {
+            field += " asc";
+        }
+        return jdbc.query(GET_DIRECTOR_FILMS + " order by " + field, mapper, directorId);
     }
 
     public Set<Long> getLikes(Long filmId) {
