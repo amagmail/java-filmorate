@@ -202,10 +202,6 @@ public class InDatabaseFilmStorage implements FilmStorage {
             directorIds.add(director.getId());
         }
         List<Long> checkVals = DatabaseUtils.getExistRows(jdbc, "genres", new ArrayList<>(directorIds));
-        /*
-        if (checkVals.size() != directorIds.size()) {
-            throw new NotFoundException("Не удалось найти режиссера по идентификатору");
-        } */
         return directorIds;
     }
 
