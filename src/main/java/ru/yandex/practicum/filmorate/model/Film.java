@@ -18,8 +18,11 @@ public class Film {
     private Long id;
     private Set<Long> likes = new HashSet<>();
     private Set<Genre> genres = new HashSet<>();
-    private Set<Director> directors = new HashSet<>();
     private Mpa mpa;
+
+    @NotNull
+    @NotEmpty
+    private Set<Director> directors = new HashSet<>();
 
     @NotNull
     @NotBlank
