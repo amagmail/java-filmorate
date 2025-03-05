@@ -164,6 +164,30 @@ public class InDatabaseFilmStorage implements FilmStorage {
         return jdbc.query(GET_DIRECTOR_FILMS + " order by " + field, mapper, directorId);
     }
 
+    @Override
+    public Collection<Film> getFilmsSearch(String searchVal, String searchFields) {
+        String query = "select src.* from (" + GET_ITEMS + ") src ";
+        String whereStr = "";
+        if (!searchVal.isEmpty() && !searchFields.isEmpty()) {
+            String condition;
+            List<String> fields = List.of(searchFields.split(","));
+            for (String field : fields) {
+                switch (field) {
+                    case "title" -> condition = String.format("lower(src.name) like '%%%s%%'", searchVal);
+                    case "director" -> condition = String.format("lower(src.director_names) like '%%%s%%'", searchVal);
+                    default -> condition = String.format("lower(src." + field + ") like '%%%s%%'", searchVal);
+                }
+                if (whereStr.isEmpty()) {
+                    whereStr += "where " + condition + " ";
+                } else {
+                    whereStr += "or " + condition + " ";
+                }
+            }
+        }
+        query += whereStr + "order by src.likes desc";
+        return jdbc.query(query, mapper);
+    }
+
     public Set<Long> getLikes(Long filmId) {
         List<Long> checkVals = DatabaseUtils.getExistRows(jdbc, "films", List.of(filmId));
         if (checkVals.isEmpty()) {

@@ -16,4 +16,6 @@ public interface FilmStorage extends Storage<Film> {
 
     Collection<Film> getDirectorFilms(Long directorId, String sortBy);
 
+    Collection<Film> getFilmsSearch(String searchVal, String searchFields);
+
 }
