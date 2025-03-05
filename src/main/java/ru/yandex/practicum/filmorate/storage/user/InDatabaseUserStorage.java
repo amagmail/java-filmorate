@@ -12,7 +12,10 @@ import ru.yandex.practicum.filmorate.utils.DatabaseUtils;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Primary
 @Component
@@ -93,7 +96,11 @@ public class InDatabaseUserStorage implements UserStorage {
 
     @Override
     public User getItem(Long userId) {
-        return jdbc.queryForObject(GET_ITEM, mapper, userId);
+        List<User> users = jdbc.query(GET_ITEM, mapper, userId);
+        if (users.isEmpty()) {
+            throw new NotFoundException("Не удалось найти пользователя по идентификатору");
+        }
+        return users.getFirst();
     }
 
     @Override
