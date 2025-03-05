@@ -28,17 +28,17 @@ public class InDatabaseFilmStorage implements FilmStorage {
             "string_agg(directors.id, ', ') as director_ids, " +
             "string_agg(directors.name, ', ') as director_names " +
             "from ( " +
-                "select films.*, " +
-                "mpa.name as mpa_name, " +
-                "mpa.description as mpa_description, " +
-                "string_agg(genres.id, ', ') as genre_ids, " +
-                "string_agg(genres.name, ', ') as genre_names, " +
-                "(select count(user_id) from likes where film_id = films.id) as likes " +
-                "from films " +
-                "left join film_genre fg on fg.film_id = films.id " +
-                "left join genres on genres.id = fg.genre_id " +
-                "left join mpa on mpa.id = films.mpa " +
-                "group by films.id " +
+            "select films.*, " +
+            "mpa.name as mpa_name, " +
+            "mpa.description as mpa_description, " +
+            "string_agg(genres.id, ', ') as genre_ids, " +
+            "string_agg(genres.name, ', ') as genre_names, " +
+            "(select count(user_id) from likes where film_id = films.id) as likes " +
+            "from films " +
+            "left join film_genre fg on fg.film_id = films.id " +
+            "left join genres on genres.id = fg.genre_id " +
+            "left join mpa on mpa.id = films.mpa " +
+            "group by films.id " +
             ") bs " +
             "left join film_director fd on fd.film_id = bs.id " +
             "left join directors on directors.id = fd.director_id";
@@ -127,7 +127,11 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
     @Override
     public Film getItem(Long filmId) {
-        return jdbc.queryForObject(GET_ITEM, mapper, filmId);
+        List<Film> films = jdbc.query(GET_ITEM, mapper, filmId);
+        if (films.isEmpty()) {
+            throw new NotFoundException("Не удалось фильм по идентификатору");
+        }
+        return films.getFirst();
     }
 
     @Override
