@@ -45,7 +45,6 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
     private static final String GET_ITEMS = BASE_DATA_QUERY + " group by bs.id";
     private static final String GET_ITEM = BASE_DATA_QUERY + " where bs.id = ? group by bs.id";
-    private static final String GET_POPULAR = BASE_DATA_QUERY + " group by bs.id order by bs.likes desc limit ?";
     private static final String GET_DIRECTOR_FILMS = BASE_DATA_QUERY + " where directors.id = ? group by bs.id";
     private static final String INSERT_ITEM = "insert into films(name, description, release_date, duration, mpa) values (?, ?, ?, ?, ?)";
     private static final String UPDATE_ITEM = "update films set name = ?, description = ?, release_date = ?, duration = ?, mpa = ? where id = ?";
@@ -153,8 +152,35 @@ public class InDatabaseFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getPopular(int count) {
-        return jdbc.query(GET_POPULAR, mapper, count);
+    public Collection<Film> getPopular(int count, Long genreId, Integer year) {
+
+        Collection<Film> films;
+        String query = BASE_DATA_QUERY;
+
+        String whereGenre = "";
+        if (genreId != null) {
+            whereGenre = "exists(SELECT 1 FROM film_genre fg WHERE fg.film_id = bs.id AND fg.genre_id = ?)";
+        }
+
+        String whereYear = "";
+        if (year != null) {
+            whereYear = "extract(YEAR FROM bs.RELEASE_DATE) = ?";
+        }
+
+        if (!whereGenre.isEmpty() && !whereYear.isEmpty()) {
+            query += " where " + whereGenre + " and " + whereYear + " group by bs.id order by bs.likes desc limit ?";
+            films = jdbc.query(query, mapper, genreId, year, count);
+        } else if (!whereGenre.isEmpty()) {
+            query += " where " + whereGenre + " group by bs.id order by bs.likes desc limit ?";
+            films = jdbc.query(query, mapper, genreId, count);
+        } else if (!whereYear.isEmpty()) {
+            query += " where " + whereYear + " group by bs.id order by bs.likes desc limit ?";
+            films = jdbc.query(query, mapper, year, count);
+        } else {
+            query += " group by bs.id order by bs.likes desc limit ?";
+            films = jdbc.query(query, mapper, count);
+        }
+        return films;
     }
 
     @Override
