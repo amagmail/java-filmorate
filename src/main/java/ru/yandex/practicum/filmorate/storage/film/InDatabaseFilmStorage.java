@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -7,6 +8,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -17,6 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.*;
 
+@Slf4j
 @Primary
 @Component
 public class InDatabaseFilmStorage implements FilmStorage {
@@ -58,6 +61,10 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
     private static final String SET_DIRECTOR = "insert into film_director(film_id, director_id) values(?, ?)";
     private static final String REMOVE_DIRECTORS = "delete from film_director where film_id = ?";
+
+    private static final String REMOVE_FILM = "DELETE FROM films WHERE id = ?";
+    private static final String CLEAR_LIKES = "DELETE FROM likes WHERE film_id = ?";
+    private static final String CLEAR_FILM_GENRE = "DELETE FROM film_genre WHERE film_id = ? ";
 
     public InDatabaseFilmStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         this.jdbc = jdbc;
@@ -259,4 +266,26 @@ public class InDatabaseFilmStorage implements FilmStorage {
         return directorIds;
     }
 
+    @Override
+    public Film removeFilm(Long filmId) {
+        clearLikesForFilm(filmId);
+        clearFilmGenre(filmId);
+        log.info("Будем удалять фильм по ID: {}", filmId);
+        if (filmId == null) {
+            throw new ValidationException("ID фильма пуст. Введите значение и повторите попытку.");
+        }
+        Film film = getItem(filmId);
+        jdbc.update(REMOVE_FILM, filmId);
+        log.info("Удален фильм({}) по ID: {}", film, filmId);
+        return film;
+    }
+
+    @Override
+    public void clearLikesForFilm(Long filmId) {
+        jdbc.update(CLEAR_LIKES, filmId);
+    }
+
+    private void clearFilmGenre(Long filmId) {
+        jdbc.update(CLEAR_FILM_GENRE, filmId);
+    }
 }

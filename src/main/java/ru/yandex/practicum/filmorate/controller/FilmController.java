@@ -79,4 +79,8 @@ public class FilmController {
         return filmService.getFilmsSearch(searchVal, searchFields);
     }
 
+    @DeleteMapping("/{filmId}")
+    public Film removeFilm(@PathVariable("filmId") Long filmId) {
+        return filmService.removeFilm(filmId);
+    }
 }

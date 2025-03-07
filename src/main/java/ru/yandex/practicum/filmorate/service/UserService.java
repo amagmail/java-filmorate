@@ -50,4 +50,7 @@ public class UserService {
         return userStorage.getItem(userId);
     }
 
+    public User removeUser(Long userId) {
+        return userStorage.removeUser(userId);
+    }
 }

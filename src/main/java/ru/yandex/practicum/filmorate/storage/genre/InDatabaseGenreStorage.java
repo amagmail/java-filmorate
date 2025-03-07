@@ -47,5 +47,4 @@ public class InDatabaseGenreStorage implements GenreStorage {
         }
         return jdbc.queryForObject(GET_ITEM, mapper, id);
     }
-
 }

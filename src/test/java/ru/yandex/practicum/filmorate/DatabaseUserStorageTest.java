@@ -13,6 +13,8 @@ import ru.yandex.practicum.filmorate.storage.user.mappers.UserRowMapper;
 
 import java.time.LocalDate;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -37,4 +39,19 @@ public class DatabaseUserStorageTest {
         System.out.println("End");
     }
 
+    @Test
+    public void removeUserTest() {
+        System.out.println("Begin");
+        User user = new User();
+        user.setLogin("test");
+        user.setEmail("test@mail.ru");
+        user.setName("test");
+        user.setBirthday(LocalDate.of(2000, 1, 1));
+        User userRes = userStorage.create(user);
+
+        Long userId = userRes.getId();
+        userStorage.removeUser(userId);
+        assertThat(userStorage.getItems().isEmpty());
+
+    }
 }
