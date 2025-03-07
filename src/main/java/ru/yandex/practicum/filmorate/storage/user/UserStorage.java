@@ -16,4 +16,6 @@ public interface UserStorage extends Storage<User> {
 
     Collection<User> getMutualFriends(Long userId, Long otherId);
 
+    User removeUser(Long userId);
+
 }

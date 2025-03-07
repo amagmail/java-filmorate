@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -7,6 +8,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.utils.DatabaseUtils;
 
@@ -17,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Primary
 @Component
 public class InDatabaseUserStorage implements UserStorage {
@@ -50,6 +53,7 @@ public class InDatabaseUserStorage implements UserStorage {
 
     private static final String ACTUALIZE_FRIENDSHIPS_FALSE = "update friendship set accepted = false " +
             "where user_id = ? and friend_id = ?";
+    private static final String REMOVE_USER = "DELETE FROM users WHERE id = ?";
 
     public InDatabaseUserStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         this.jdbc = jdbc;
@@ -152,4 +156,15 @@ public class InDatabaseUserStorage implements UserStorage {
         return new HashSet<>(userIds);
     }
 
+    @Override
+    public User removeUser(Long userId) {
+        log.info("Будем удалять пользователя по ID: {}", userId);
+        if (userId == null) {
+            throw new ValidationException("ID пользователя пуст. Введите значение и повторите попытку.");
+        }
+        User user = getItem(userId);
+        jdbc.update(REMOVE_USER, userId);
+        log.info("Удален пользователь({}) по ID: {}", user, userId);
+        return user;
+    }
 }

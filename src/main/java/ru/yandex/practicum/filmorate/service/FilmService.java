@@ -63,4 +63,7 @@ public class FilmService {
         return filmStorage.getFilmsSearch(searchVal, searchFields);
     }
 
+    public Film removeFilm(Long filmId) {
+        return filmStorage.removeFilm(filmId);
+    }
 }

@@ -18,4 +18,5 @@ public interface FilmStorage extends Storage<Film> {
 
     Collection<Film> getFilmsSearch(String searchVal, String searchFields);
 
+    Film removeFilm(Long filmId);
 }
