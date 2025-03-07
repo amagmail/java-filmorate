@@ -12,7 +12,7 @@ public interface FilmStorage extends Storage<Film> {
 
     Set<Long> removeLike(Long filmId, Long userId);
 
-    Collection<Film> getPopular(int count);
+    Collection<Film> getPopular(int count, Long genreId, Integer year);
 
     Collection<Film> getDirectorFilms(Long directorId, String sortBy);
 
