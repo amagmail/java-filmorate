@@ -18,4 +18,5 @@ public interface UserStorage extends Storage<User> {
 
     User removeUser(Long userId);
 
+    void clearAllFriends(Long userId);
 }

@@ -64,6 +64,8 @@ public class InDatabaseFilmStorage implements FilmStorage {
     private static final String REMOVE_DIRECTORS = "delete from film_director where film_id = ?";
 
     private static final String REMOVE_FILM = "DELETE FROM films WHERE id = ?";
+    private static final String CLEAR_LIKES = "DELETE FROM likes WHERE film_id = ?";
+    private static final String CLEAR_FILM_GENRE = "DELETE FROM film_genre WHERE film_id = ? ";
 
     public InDatabaseFilmStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         this.jdbc = jdbc;
@@ -240,6 +242,8 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
     @Override
     public Film removeFilm(Long filmId) {
+        clearLikesForFilm(filmId);
+        clearFilmGenre(filmId);
         log.info("Будем удалять фильм по ID: {}", filmId);
         if (filmId == null) {
             throw new ValidationException("ID фильма пуст. Введите значение и повторите попытку.");
@@ -248,5 +252,14 @@ public class InDatabaseFilmStorage implements FilmStorage {
         jdbc.update(REMOVE_FILM, filmId);
         log.info("Удален фильм({}) по ID: {}", film, filmId);
         return film;
+    }
+
+    @Override
+    public void clearLikesForFilm(Long filmId) {
+        jdbc.update(CLEAR_LIKES, filmId);
+    }
+
+    private void clearFilmGenre(Long filmId) {
+        jdbc.update(CLEAR_FILM_GENRE, filmId);
     }
 }

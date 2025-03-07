@@ -54,6 +54,7 @@ public class InDatabaseUserStorage implements UserStorage {
     private static final String ACTUALIZE_FRIENDSHIPS_FALSE = "update friendship set accepted = false " +
             "where user_id = ? and friend_id = ?";
     private static final String REMOVE_USER = "DELETE FROM users WHERE id = ?";
+    private static final String CLEAR_FRIENDS = "DELETE FROM friendship WHERE user_id = ? or friend_id = ?";
 
     public InDatabaseUserStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         this.jdbc = jdbc;
@@ -158,6 +159,7 @@ public class InDatabaseUserStorage implements UserStorage {
 
     @Override
     public User removeUser(Long userId) {
+        clearAllFriends(userId);
         log.info("Будем удалять пользователя по ID: {}", userId);
         if (userId == null) {
             throw new ValidationException("ID пользователя пуст. Введите значение и повторите попытку.");
@@ -166,5 +168,10 @@ public class InDatabaseUserStorage implements UserStorage {
         jdbc.update(REMOVE_USER, userId);
         log.info("Удален пользователь({}) по ID: {}", user, userId);
         return user;
+    }
+
+    @Override
+    public void clearAllFriends(Long userId) {
+        jdbc.update(CLEAR_FRIENDS, userId, userId);
     }
 }

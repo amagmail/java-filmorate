@@ -104,4 +104,10 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
         return films.remove(filmId);
     }
+
+    @Override
+    public void clearLikesForFilm(Long filmId) {
+        Film film = getItem(filmId);
+        film.getLikes().clear();
+    }
 }

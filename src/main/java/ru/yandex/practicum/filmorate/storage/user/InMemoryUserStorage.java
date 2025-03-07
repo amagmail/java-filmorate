@@ -112,4 +112,10 @@ public class InMemoryUserStorage implements UserStorage {
         }
         return users.remove(userId);
     }
+
+    @Override
+    public void clearAllFriends(Long userId) {
+        User user1 = getItem(userId);
+        user1.getFriends().clear();
+    }
 }
