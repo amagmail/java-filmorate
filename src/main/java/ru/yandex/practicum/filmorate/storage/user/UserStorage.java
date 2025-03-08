@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.Storage;
 
@@ -19,4 +20,6 @@ public interface UserStorage extends Storage<User> {
     User removeUser(Long userId);
 
     void clearAllFriends(Long userId);
+
+    Collection<Feed> getFeed(Long userId);
 }
