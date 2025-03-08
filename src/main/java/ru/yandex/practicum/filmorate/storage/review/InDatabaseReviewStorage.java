@@ -61,6 +61,7 @@ public class InDatabaseReviewStorage implements ReviewStorage {
         Long id = keyHolder.getKeyAs(Long.class);
         if (id != null) {
             entity.setReviewId(id);
+            DatabaseUtils.addDataToFeed(jdbc, entity.getUserId(), "REVIEW", "ADD", entity.getReviewId());
             return entity;
         } else {
             throw new InternalServerException("Не удалось сохранить данные");
@@ -71,6 +72,7 @@ public class InDatabaseReviewStorage implements ReviewStorage {
     public Review update(Review entity) {
         int rowsUpdated = jdbc.update(UPDATE_QUERY, entity.getFilmId(), entity.getUserId(), entity.getContent(), entity.getIsPositive(), entity.getReviewId());
         if (rowsUpdated > 0) {
+            DatabaseUtils.addDataToFeed(jdbc, entity.getUserId(), "REVIEW", "UPDATE", entity.getReviewId());
             return entity;
         } else {
             throw new NotFoundException("Отзыв с идентификатором " + entity.getReviewId() + " не существует");
@@ -102,7 +104,9 @@ public class InDatabaseReviewStorage implements ReviewStorage {
         if (checkVals.isEmpty()) {
             throw new NotFoundException("Не удалось найти отзыв по идентификатору");
         }
+        Review review = getItem(reviewId);
         int rowsUpdated = jdbc.update(REMOVE_QUERY, reviewId);
+        DatabaseUtils.addDataToFeed(jdbc, review.getUserId(), "REVIEW", "REMOVE", review.getReviewId());
         return rowsUpdated > 0;
     }
 

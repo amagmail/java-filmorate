@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.mappers.FeedRowMapper;
 import ru.yandex.practicum.filmorate.utils.DatabaseUtils;
 
 import java.sql.PreparedStatement;
@@ -55,6 +57,8 @@ public class InDatabaseUserStorage implements UserStorage {
             "where user_id = ? and friend_id = ?";
     private static final String REMOVE_USER = "DELETE FROM users WHERE id = ?";
     private static final String CLEAR_FRIENDS = "DELETE FROM friendship WHERE user_id = ? or friend_id = ?";
+
+    private static final String GET_FEED = "select * from feed where user_id = ?";
 
     public InDatabaseUserStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         this.jdbc = jdbc;
@@ -119,6 +123,7 @@ public class InDatabaseUserStorage implements UserStorage {
             int rowsUpdated = jdbc.update(SET_FRIEND, userId, friendId);
             if (rowsUpdated > 0) {
                 friends.add(friendId);
+                DatabaseUtils.addDataToFeed(jdbc, userId, "FRIEND", "ADD", friendId);
                 jdbc.update(ACTUALIZE_FRIENDSHIPS_TRUE, userId, friendId, friendId, userId, userId, friendId, friendId, userId);
             }
         }
@@ -133,6 +138,7 @@ public class InDatabaseUserStorage implements UserStorage {
         }
         int rowsUpdated = jdbc.update(REMOVE_FRIEND, userId, friendId);
         if (rowsUpdated > 0) {
+            DatabaseUtils.addDataToFeed(jdbc, userId, "FRIEND", "REMOVE", friendId);
             jdbc.update(ACTUALIZE_FRIENDSHIPS_FALSE, friendId, userId);
         }
         return getFriends(userId);
@@ -174,4 +180,10 @@ public class InDatabaseUserStorage implements UserStorage {
     public void clearAllFriends(Long userId) {
         jdbc.update(CLEAR_FRIENDS, userId, userId);
     }
+
+    @Override
+    public Collection<Feed> getFeed(Long userId) {
+        return jdbc.query(GET_FEED, new FeedRowMapper(), userId);
+    }
+
 }

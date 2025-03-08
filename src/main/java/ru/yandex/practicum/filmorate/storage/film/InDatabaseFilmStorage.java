@@ -147,6 +147,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
             int rowsUpdated = jdbc.update(SET_LIKE, filmId, userId);
             if (rowsUpdated > 0) {
                 likes.add(userId);
+                DatabaseUtils.addDataToFeed(jdbc, userId, "LIKE", "ADD", filmId);
             }
         }
         return likes;
@@ -155,6 +156,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
     @Override
     public Set<Long> removeLike(Long filmId, Long userId) {
         jdbc.update(REMOVE_LIKE, filmId, userId);
+        DatabaseUtils.addDataToFeed(jdbc, userId, "LIKE", "REMOVE", filmId);
         return getLikes(filmId);
     }
 
