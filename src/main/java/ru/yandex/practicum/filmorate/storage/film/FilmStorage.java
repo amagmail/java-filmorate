@@ -21,4 +21,6 @@ public interface FilmStorage extends Storage<Film> {
     Film removeFilm(Long filmId);
 
     void clearLikesForFilm(Long filmId);
+
+    Collection<Film> getCommonFilms(Long userId, Long friendId);
 }
