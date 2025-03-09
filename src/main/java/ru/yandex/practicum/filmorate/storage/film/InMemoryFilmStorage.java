@@ -110,4 +110,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         Film film = getItem(filmId);
         film.getLikes().clear();
     }
+
+    @Override
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        return null;
+    }
 }
