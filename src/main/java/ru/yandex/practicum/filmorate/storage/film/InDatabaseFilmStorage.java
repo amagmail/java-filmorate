@@ -13,6 +13,8 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.film.mappers.FilmListRowMapper;
+import ru.yandex.practicum.filmorate.storage.film.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.utils.DatabaseUtils;
 
 import java.sql.PreparedStatement;
@@ -26,6 +28,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
     private final JdbcTemplate jdbc;
     private final RowMapper<Film> mapper;
+    private final RowMapper<List<Film>> listMapper;
 
     private static final String BASE_DATA_QUERY = "select bs.*, " +
             "string_agg(directors.id, ', ') as director_ids, " +
@@ -65,21 +68,23 @@ public class InDatabaseFilmStorage implements FilmStorage {
     private static final String REMOVE_FILM = "DELETE FROM films WHERE id = ?";
     private static final String CLEAR_LIKES = "DELETE FROM likes WHERE film_id = ?";
     private static final String CLEAR_FILM_GENRE = "DELETE FROM film_genre WHERE film_id = ? ";
-    private static final String GET_COMMON_FILMS_QUERY = "SELECT *" +
-            "FROM(SELECT f.id, f.name, f.description, f.release_date, f.duration," +
-            " m.id, m.name, fg.genre_id, g.name " +
+    private static final String GET_COMMON_FILMS_QUERY = "SELECT f.*, " +
+            "g.id AS genre_id, g.name AS genre_name, " +
+            "m.name AS mpa_name, m.id AS mpa_id, " +
+            "(SELECT COUNT(film_id) FROM likes AS l WHERE l.film_id = f.id) AS likes " +
             "FROM films AS f " +
-            "LEFT JOIN mpa AS m ON f.mpa = m.id " +
             "LEFT JOIN film_genre AS fg ON f.id = fg.film_id " +
             "LEFT JOIN genres AS g ON fg.genre_id = g.id " +
-            "LEFT JOIN likes AS l ON f.id = l.film_id " +
-            "GROUP BY f.name, f.id " +
-            "ORDER BY COUNT (l.film_id)) f, likes AS l1, likes AS l2" +
-            "WHERE f.id = l1.film_id and f.id = l2.film_id and l1.user_id = ? and l2.user_id = ?;";
+            "LEFT JOIN likes AS l1 ON f.id = l1.film_id " +
+            "LEFT JOIN likes AS l2 ON f.id = l2.film_id " +
+            "LEFT JOIN mpa AS m ON f.mpa = m.id " +
+            "WHERE l1.user_id = ? AND l2.user_id = ? " +
+            "ORDER BY likes DESC";
 
-    public InDatabaseFilmStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
+    public InDatabaseFilmStorage(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
-        this.mapper = mapper;
+        this.mapper = new FilmRowMapper();
+        this.listMapper = new FilmListRowMapper();
     }
 
     @Override
@@ -294,9 +299,18 @@ public class InDatabaseFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
-        Collection<Film> films = jdbc.query(GET_COMMON_FILMS_QUERY, mapper, userId, friendId);
-        return films;
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
+            throw new ValidationException("ID пользователя пуст. Введите значение и повторите попытку.");
+        }
+
+        try {
+            return jdbc.query(GET_COMMON_FILMS_QUERY, listMapper, userId, friendId).getFirst();
+        } catch (NoSuchElementException e) {
+            return Collections.emptyList();
+        } catch (Exception e) {
+            throw new RuntimeException("Произошла ошибка", e);
+        }
     }
 
     @Override

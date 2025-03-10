@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -67,7 +68,8 @@ public class FilmService {
         return filmStorage.removeFilm(filmId);
     }
 
-    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
         return filmStorage.getCommonFilms(userId, friendId);
     }
 }
+

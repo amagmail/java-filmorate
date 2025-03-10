@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.Storage;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public interface FilmStorage extends Storage<Film> {
@@ -22,5 +23,5 @@ public interface FilmStorage extends Storage<Film> {
 
     void clearLikesForFilm(Long filmId);
 
-    Collection<Film> getCommonFilms(Long userId, Long friendId);
+    List<Film> getCommonFilms(Long userId, Long friendId);
 }
