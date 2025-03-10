@@ -66,6 +66,23 @@ public class InDatabaseFilmStorage implements FilmStorage {
     private static final String CLEAR_LIKES = "DELETE FROM likes WHERE film_id = ?";
     private static final String CLEAR_FILM_GENRE = "DELETE FROM film_genre WHERE film_id = ? ";
 
+    private static final String FIND_SIMILAR_USERS =
+            "SELECT l2.user_id AS similar_user_id, COUNT(*) AS common_likes " +
+                    "FROM likes l1 " +
+                    "JOIN likes l2 ON l1.film_id = l2.film_id " +
+                    "WHERE l1.user_id = ? AND l2.user_id != ? " +
+                    "GROUP BY l2.user_id " +
+                    "ORDER BY common_likes DESC " +
+                    "LIMIT 10";
+    private static final String FIND_FILMS_LIKED_BY_USER_BUT_NOT_TARGET =
+            "SELECT l.film_id " +
+                    "FROM likes l " +
+                    "WHERE l.user_id = ? AND l.film_id NOT IN ( " +
+                    "    SELECT film_id " +
+                    "    FROM likes " +
+                    "    WHERE user_id = ? " +
+                    ")";
+
     public InDatabaseFilmStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         this.jdbc = jdbc;
         this.mapper = mapper;
@@ -289,5 +306,25 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
     private void clearFilmGenre(Long filmId) {
         jdbc.update(CLEAR_FILM_GENRE, filmId);
+    }
+
+    @Override
+    public List<Long> findSimilarUsers(Long userId) {
+        return jdbc.query(FIND_SIMILAR_USERS, (rs, rowNum) -> rs.getLong("similar_user_id"), userId, userId);
+    }
+
+    @Override
+    public List<Long> findFilmsLikedByUserButNotTarget(Long similarUserId, Long targetUserId) {
+        return jdbc.queryForList(FIND_FILMS_LIKED_BY_USER_BUT_NOT_TARGET, Long.class, similarUserId, targetUserId);
+    }
+
+    @Override
+    public Collection<Film> getFilmsByIds(List<Long> filmIds) {
+        if (filmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String sql = BASE_DATA_QUERY + " WHERE bs.id IN (" + String.join(",", Collections.nCopies(filmIds.size(), "?")) + ")";
+        return jdbc.query(sql, mapper, filmIds.toArray());
     }
 }

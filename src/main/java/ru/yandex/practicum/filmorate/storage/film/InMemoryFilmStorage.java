@@ -110,4 +110,19 @@ public class InMemoryFilmStorage implements FilmStorage {
         Film film = getItem(filmId);
         film.getLikes().clear();
     }
+
+    @Override
+    public List<Long> findSimilarUsers(Long userId) {
+        return null;
+    }
+
+    @Override
+    public List<Long> findFilmsLikedByUserButNotTarget(Long similarUserId, Long targetUserId) {
+        return null;
+    }
+
+    @Override
+    public Collection<Film> getFilmsByIds(List<Long> filmIds) {
+        return null;
+    }
 }

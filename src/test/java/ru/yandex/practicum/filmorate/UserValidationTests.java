@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
@@ -21,7 +22,8 @@ public class UserValidationTests {
         System.out.println(user);
 
         InMemoryUserStorage storage = new InMemoryUserStorage();
-        UserService service = new UserService(storage);
+        InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
+        UserService service = new UserService(storage, filmStorage);
         UserController controller = new UserController(service);
 
         User u1 = controller.create(user);
