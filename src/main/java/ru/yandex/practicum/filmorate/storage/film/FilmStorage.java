@@ -4,6 +4,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.Storage;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public interface FilmStorage extends Storage<Film> {
@@ -21,4 +22,10 @@ public interface FilmStorage extends Storage<Film> {
     Film removeFilm(Long filmId);
 
     void clearLikesForFilm(Long filmId);
+
+    List<Long> findSimilarUsers(Long userId);
+
+    List<Long> findFilmsLikedByUserButNotTarget(Long similarUserId, Long targetUserId);
+
+    Collection<Film> getFilmsByIds(List<Long> filmIds);
 }
