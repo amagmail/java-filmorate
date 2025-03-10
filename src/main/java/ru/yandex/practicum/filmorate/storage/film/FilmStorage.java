@@ -28,4 +28,6 @@ public interface FilmStorage extends Storage<Film> {
     List<Long> findFilmsLikedByUserButNotTarget(Long similarUserId, Long targetUserId);
 
     Collection<Film> getFilmsByIds(List<Long> filmIds);
+
+    List<Film> getCommonFilms(Long userId, Long friendId);
 }
