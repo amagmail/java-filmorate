@@ -4,17 +4,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Feed;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
 public class UserService {
 
     private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
 
     public Set<Long> setFriend(Long userId, Long friendId) {
         return userStorage.setFriend(userId, friendId);
@@ -57,5 +59,19 @@ public class UserService {
 
     public Collection<Feed> getFeed(Long userId) {
         return userStorage.getFeed(userId);
+    }
+
+    public Collection<Film> getRecommendations(Long userId) {
+        List<Long> similarUserIds = filmStorage.findSimilarUsers(userId);
+
+        Set<Long> recommendedFilmIds = new HashSet<>();
+        for (Long similarUserId : similarUserIds) {
+            recommendedFilmIds.addAll(filmStorage.findFilmsLikedByUserButNotTarget(similarUserId, userId));
+        }
+
+        if (recommendedFilmIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return filmStorage.getFilmsByIds(new ArrayList<>(recommendedFilmIds));
     }
 }

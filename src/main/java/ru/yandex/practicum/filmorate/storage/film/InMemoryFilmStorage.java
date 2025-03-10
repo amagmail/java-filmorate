@@ -112,6 +112,21 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public List<Long> findSimilarUsers(Long userId) {
+        return null;
+    }
+
+    @Override
+    public List<Long> findFilmsLikedByUserButNotTarget(Long similarUserId, Long targetUserId) {
+        return null;
+    }
+
+    @Override
+    public Collection<Film> getFilmsByIds(List<Long> filmIds) {
+        return null;
+    }
+
+    @Override
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         return new ArrayList<>();
     }
