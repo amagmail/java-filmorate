@@ -5,12 +5,12 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -18,6 +18,7 @@ public class FilmService {
 
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final DirectorStorage directorStorage;
 
     public Set<Long> setLike(Long filmId, Long userId) {
         if (userStorage.getItem(userId) == null) {
@@ -38,12 +39,31 @@ public class FilmService {
     }
 
     public Film create(Film film) {
+        List<Genre> genres = film.getGenres();
+        if (genres != null && !genres.isEmpty()) {
+            Set<Genre> set = new HashSet<>(genres);
+            genres.clear();
+            genres.addAll(set);
+            genres.sort(Comparator.comparing(Genre::getId));
+            film.setGenres(genres);
+        }
         return filmStorage.create(film);
     }
 
     public Film update(Film film) {
         if (film.getId() == null) {
             throw new ValidationException("Поле id содержит невалидное значение");
+        }
+        if (filmStorage.getItem(film.getId()) == null) {
+            throw new NotFoundException("Фильм с идентификатором " + film.getId() + " не существует");
+        }
+        List<Genre> genres = film.getGenres();
+        if (genres != null && !genres.isEmpty()) {
+            Set<Genre> set = new HashSet<>(genres);
+            genres.clear();
+            genres.addAll(set);
+            genres.sort(Comparator.comparing(Genre::getId));
+            film.setGenres(genres);
         }
         return filmStorage.update(film);
     }
@@ -57,6 +77,9 @@ public class FilmService {
     }
 
     public Collection<Film> getDirectorFilms(Long directorId, String sortBy) {
+        if (directorStorage.getItem(directorId) == null) {
+            throw new NotFoundException("Режиссера с идентификатором " + directorId + " не существует");
+        }
         return filmStorage.getDirectorFilms(directorId, sortBy);
     }
 

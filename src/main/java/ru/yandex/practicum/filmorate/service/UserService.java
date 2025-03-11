@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -58,6 +59,9 @@ public class UserService {
     }
 
     public Collection<Feed> getFeed(Long userId) {
+        if (userStorage.getItem(userId) == null) {
+            throw new NotFoundException("Не удалось найти пользователя с id " + userId);
+        }
         return userStorage.getFeed(userId);
     }
 

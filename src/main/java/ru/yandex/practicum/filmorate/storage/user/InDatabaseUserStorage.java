@@ -55,7 +55,10 @@ public class InDatabaseUserStorage implements UserStorage {
 
     private static final String ACTUALIZE_FRIENDSHIPS_FALSE = "update friendship set accepted = false " +
             "where user_id = ? and friend_id = ?";
+
     private static final String REMOVE_USER = "DELETE FROM users WHERE id = ?";
+    private static final String REMOVE_USER_IN_FEED = "DELETE FROM feed WHERE user_id = ?";
+
     private static final String CLEAR_FRIENDS = "DELETE FROM friendship WHERE user_id = ? or friend_id = ?";
 
     private static final String GET_FEED = "select * from feed where user_id = ?";
@@ -74,8 +77,8 @@ public class InDatabaseUserStorage implements UserStorage {
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
             ps.setObject(1, entity.getName());
-            ps.setObject(2, entity.getLogin());
-            ps.setObject(3, entity.getEmail());
+            ps.setObject(2, entity.getEmail());
+            ps.setObject(3, entity.getLogin());
             ps.setObject(4, entity.getBirthday());
             return ps;
         }, keyHolder);
@@ -90,7 +93,7 @@ public class InDatabaseUserStorage implements UserStorage {
 
     @Override
     public User update(User entity) {
-        int rowsUpdated = jdbc.update(UPDATE_QUERY, entity.getName(), entity.getLogin(), entity.getEmail(), entity.getBirthday(), entity.getId());
+        int rowsUpdated = jdbc.update(UPDATE_QUERY, entity.getName(), entity.getEmail(), entity.getLogin(), entity.getBirthday(), entity.getId());
         if (rowsUpdated > 0) {
             return entity;
         } else {
@@ -171,6 +174,7 @@ public class InDatabaseUserStorage implements UserStorage {
             throw new ValidationException("ID пользователя пуст. Введите значение и повторите попытку.");
         }
         User user = getItem(userId);
+        jdbc.update(REMOVE_USER_IN_FEED, userId);
         jdbc.update(REMOVE_USER, userId);
         log.info("Удален пользователь({}) по ID: {}", user, userId);
         return user;

@@ -9,7 +9,9 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Component
@@ -41,7 +43,7 @@ public class FilmRowMapper implements RowMapper<Film> {
             String[] arrIds = genreIds.split(",");
             String[] arrNames = genreNames.split(",");
             if (arrIds.length == arrNames.length) {
-                Set<Genre> genres = new HashSet<>();
+                List<Genre> genres = new ArrayList<>();
                 for (int i = 0; i < arrIds.length; i++) {
                     Genre genre = new Genre();
                     Long genreId = Long.valueOf(arrIds[i].trim());

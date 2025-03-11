@@ -108,7 +108,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
     public Film create(Film entity) {
 
         Long mpaId = getValidMpaId(entity.getMpa());
-        Set<Long> genreIds = getValidGenreIds(entity.getGenres());
+        List<Long> genreIds = getValidGenreIds(entity.getGenres());
         Set<Long> directorIds = getValidDirectorIds(entity.getDirectors());
 
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
@@ -140,7 +140,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
     public Film update(Film entity) {
 
         Long mpaId = getValidMpaId(entity.getMpa());
-        Set<Long> genreIds = getValidGenreIds(entity.getGenres());
+        List<Long> genreIds = getValidGenreIds(entity.getGenres());
         Set<Long> directorIds = getValidDirectorIds(entity.getDirectors());
 
         int rowsUpdated = jdbc.update(UPDATE_ITEM, entity.getName(), entity.getDescription(), entity.getReleaseDate(), entity.getDuration(), mpaId, entity.getId());
@@ -280,8 +280,8 @@ public class InDatabaseFilmStorage implements FilmStorage {
         return mpaId;
     }
 
-    private Set<Long> getValidGenreIds(Set<Genre> genres) {
-        Set<Long> genreIds = new HashSet<>();
+    private List<Long> getValidGenreIds(List<Genre> genres) {
+        List<Long> genreIds = new ArrayList<>();
         for (Genre genre : genres) {
             genreIds.add(genre.getId());
         }

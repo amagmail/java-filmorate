@@ -25,6 +25,7 @@ public class InDatabaseDirectorStorage implements DirectorStorage {
     private static final String INSERT_QUERY = "insert into directors(name) values (?)";
     private static final String UPDATE_QUERY = "update directors set name = ? where id = ?";
     private static final String REMOVE_QUERY = "delete from directors where id = ?";
+    private static final String REMOVE_QUERY_IN_FILM_DIRECTOR = "delete from film_director where director_id = ?";
 
     public InDatabaseDirectorStorage(JdbcTemplate jdbc, RowMapper<Director> mapper) {
         this.jdbc = jdbc;
@@ -78,6 +79,7 @@ public class InDatabaseDirectorStorage implements DirectorStorage {
         if (checkVals.isEmpty()) {
             throw new NotFoundException("Не удалось найти режиссера по идентификатору");
         }
+        jdbc.update(REMOVE_QUERY_IN_FILM_DIRECTOR, directorId);
         int rowsUpdated = jdbc.update(REMOVE_QUERY, directorId);
         return rowsUpdated > 0;
     }

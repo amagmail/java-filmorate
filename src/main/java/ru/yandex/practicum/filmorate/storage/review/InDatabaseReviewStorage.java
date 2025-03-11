@@ -20,13 +20,16 @@ public class InDatabaseReviewStorage implements ReviewStorage {
     private final JdbcTemplate jdbc;
     private final RowMapper<Review> mapper;
 
-    private static final String GET_ITEMS = "select * from reviews order by useful desc";
-    private static final String GET_ITEMS_WITH_FILTER = "select * from reviews where film_id = ? order by useful desc limit ?";
+    private static final String GET_ITEMS = "select * from reviews ";
+    private static final String FILM_FILTER = "where film_id = ? ";
+    private static final String ORDER_FILTER = "order by useful desc ";
+    private static final String LIMIT_FILTER = "limit ?";
 
     private static final String GET_ITEM = "select * from reviews where id = ?";
     private static final String INSERT_QUERY = "insert into reviews(film_id, user_id, content, is_positive) values (?, ?, ?, ?)";
-    private static final String UPDATE_QUERY = "update reviews set film_id = ?, user_id = ?, content = ?, is_positive = ? where id = ?";
+    private static final String UPDATE_QUERY = "update reviews set content = ?, is_positive = ? where id = ?";
     private static final String REMOVE_QUERY = "delete from reviews where id = ?";
+    private static final String REMOVE_QUERY_IN_REVIEW_USER = "delete from review_user where review_id = ?";
 
     private static final String UPDATE_USEFUL_QUERY = "update reviews set useful = (select sum(val) from review_user where review_id = ?) where id = ?";
     private static final String INSERT_REVIEW_USER_QUERY = "merge into review_user t " +
@@ -70,10 +73,10 @@ public class InDatabaseReviewStorage implements ReviewStorage {
 
     @Override
     public Review update(Review entity) {
-        int rowsUpdated = jdbc.update(UPDATE_QUERY, entity.getFilmId(), entity.getUserId(), entity.getContent(), entity.getIsPositive(), entity.getReviewId());
+        int rowsUpdated = jdbc.update(UPDATE_QUERY, entity.getContent(), entity.getIsPositive(), entity.getReviewId());
         if (rowsUpdated > 0) {
             DatabaseUtils.addDataToFeed(jdbc, entity.getUserId(), "REVIEW", "UPDATE", entity.getReviewId());
-            return entity;
+            return getItem(entity.getReviewId());
         } else {
             throw new NotFoundException("Отзыв с идентификатором " + entity.getReviewId() + " не существует");
         }
@@ -81,12 +84,15 @@ public class InDatabaseReviewStorage implements ReviewStorage {
 
     @Override
     public Collection<Review> getItems() {
-        return jdbc.query(GET_ITEMS, mapper);
+        return jdbc.query(GET_ITEMS + ORDER_FILTER, mapper);
     }
 
     @Override
     public Collection<Review> getItems(Long filmId, Integer count) {
-        return jdbc.query(GET_ITEMS_WITH_FILTER, mapper, filmId, count);
+        if (filmId == null) {
+            return jdbc.query(GET_ITEMS + ORDER_FILTER + LIMIT_FILTER, mapper, count);
+        }
+        return jdbc.query(GET_ITEMS + FILM_FILTER + ORDER_FILTER + LIMIT_FILTER, mapper, filmId, count);
     }
 
     @Override
@@ -105,6 +111,7 @@ public class InDatabaseReviewStorage implements ReviewStorage {
             throw new NotFoundException("Не удалось найти отзыв по идентификатору");
         }
         Review review = getItem(reviewId);
+        jdbc.update(REMOVE_QUERY_IN_REVIEW_USER, reviewId);
         int rowsUpdated = jdbc.update(REMOVE_QUERY, reviewId);
         DatabaseUtils.addDataToFeed(jdbc, review.getUserId(), "REVIEW", "REMOVE", review.getReviewId());
         return rowsUpdated > 0;

@@ -25,7 +25,7 @@ public class FilmValidationTests {
 
         InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
         InMemoryUserStorage userStorage = new InMemoryUserStorage();
-        FilmService service = new FilmService(filmStorage, userStorage);
+        FilmService service = new FilmService(filmStorage, userStorage, null);
         FilmController controller = new FilmController(service);
 
         Film f1 = controller.create(film);
@@ -37,7 +37,7 @@ public class FilmValidationTests {
         Assertions.assertFalse(f1.getReleaseDate().isBefore(LocalDate.from(dateFrom)));
         Assertions.assertTrue(f1.getDuration() > 0);
         Assertions.assertNotNull(f1.getName());
-        Assertions.assertEquals(controller.getItems().size(),  2, "Ошибка валидации");
+        Assertions.assertEquals(controller.getItems().size(), 2, "Ошибка валидации");
     }
 
 }
