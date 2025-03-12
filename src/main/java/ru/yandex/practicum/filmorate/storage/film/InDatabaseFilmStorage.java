@@ -176,12 +176,10 @@ public class InDatabaseFilmStorage implements FilmStorage {
     @Override
     public Set<Long> setLike(Long filmId, Long userId) {
         Set<Long> likes = getLikes(filmId);
-        if (!likes.contains(userId)) {
-            int rowsUpdated = jdbc.update(SET_LIKE, filmId, userId);
-            if (rowsUpdated > 0) {
-                likes.add(userId);
-                DatabaseUtils.addDataToFeed(jdbc, userId, "LIKE", "ADD", filmId);
-            }
+        int rowsUpdated = jdbc.update(SET_LIKE, filmId, userId);
+        if (rowsUpdated > 0) {
+            likes.add(userId);
+            DatabaseUtils.addDataToFeed(jdbc, userId, "LIKE", "ADD", filmId);
         }
         return likes;
     }
