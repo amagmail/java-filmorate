@@ -30,7 +30,6 @@ public class InDatabaseReviewStorage implements ReviewStorage {
     private static final String UPDATE_QUERY = "update reviews set content = ?, is_positive = ? where id = ?";
     private static final String REMOVE_QUERY = "delete from reviews where id = ?";
     private static final String REMOVE_QUERY_IN_REVIEW_USER = "delete from review_user where review_id = ?";
-    private static final String REMOVE_QUERY_IN_FEED = "delete from feed where entity_id = ? and event_type = 'REVIEW'";
 
     private static final String UPDATE_USEFUL_QUERY = "update reviews set useful = (select sum(val) from review_user where review_id = ?) where id = ?";
     private static final String INSERT_REVIEW_USER_QUERY = "merge into review_user t " +
@@ -74,9 +73,10 @@ public class InDatabaseReviewStorage implements ReviewStorage {
 
     @Override
     public Review update(Review entity) {
+        Review oldReview = getItem(entity.getReviewId());
         int rowsUpdated = jdbc.update(UPDATE_QUERY, entity.getContent(), entity.getIsPositive(), entity.getReviewId());
         if (rowsUpdated > 0) {
-            DatabaseUtils.addDataToFeed(jdbc, entity.getUserId(), "REVIEW", "UPDATE", entity.getReviewId());
+            DatabaseUtils.addDataToFeed(jdbc, oldReview.getUserId(), "REVIEW", "UPDATE", entity.getReviewId());
             return getItem(entity.getReviewId());
         } else {
             throw new NotFoundException("Отзыв с идентификатором " + entity.getReviewId() + " не существует");
@@ -112,7 +112,6 @@ public class InDatabaseReviewStorage implements ReviewStorage {
             throw new NotFoundException("Не удалось найти отзыв по идентификатору");
         }
         Review review = getItem(reviewId);
-        jdbc.update(REMOVE_QUERY_IN_FEED, reviewId);
         jdbc.update(REMOVE_QUERY_IN_REVIEW_USER, reviewId);
         int rowsUpdated = jdbc.update(REMOVE_QUERY, reviewId);
         DatabaseUtils.addDataToFeed(jdbc, review.getUserId(), "REVIEW", "REMOVE", review.getReviewId());
