@@ -11,10 +11,10 @@ import java.sql.SQLException;
 import java.util.*;
 
 @Component
-public class FilmListRowMapper implements RowMapper<List<Film>> {
+public class FilmListRowMapper implements RowMapper<Collection<Film>> {
 
     @Override
-    public List<Film> mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+    public Collection<Film> mapRow(ResultSet resultSet, int rowNum) throws SQLException {
         Map<Long, Film> filmsMap = new HashMap<>();
         do {
             Long filmId = resultSet.getLong("id");

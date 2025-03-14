@@ -108,11 +108,11 @@ public class InDatabaseUserStorage implements UserStorage {
 
     @Override
     public User getItem(Long userId) {
-        List<User> users = jdbc.query(GET_ITEM, mapper, userId);
+        Collection<User> users = jdbc.query(GET_ITEM, mapper, userId);
         if (users.isEmpty()) {
             throw new NotFoundException("Не удалось найти пользователя по идентификатору");
         }
-        return users.getFirst();
+        return users.iterator().next();
     }
 
     @Override
