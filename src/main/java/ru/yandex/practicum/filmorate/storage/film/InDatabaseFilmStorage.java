@@ -357,7 +357,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
             return Collections.emptyList();
         }
 
-        String sql = BASE_DATA_QUERY + " WHERE bs.id IN (" + String.join(",", Collections.nCopies(filmIds.size(), "?")) + ")";
+        String sql = BASE_DATA_QUERY + " where bs.id in (" + String.join(",", Collections.nCopies(filmIds.size(), "?")) + ")";
         return jdbc.query(sql, mapper, filmIds.toArray());
     }
 }
