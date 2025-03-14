@@ -61,21 +61,11 @@ public class FilmController {
 
     @GetMapping("/director/{directorId}")
     public Collection<Film> getDirectorFilms(@PathVariable("directorId") Long directorId, @RequestParam(value = "sortBy", defaultValue = "likes") String sortBy) {
-        sortBy = sortBy.toLowerCase();
-        sortBy = sortBy.replace("[", "");
-        sortBy = sortBy.replace("]", "");
-        sortBy = sortBy.replace("year", "release_date");
         return filmService.getDirectorFilms(directorId, sortBy);
     }
 
     @GetMapping("/search")
     public Collection<Film> getFilmsSearch(@RequestParam(value = "query", required = false) String searchVal, @RequestParam(value = "by", required = false) String searchFields) {
-        if (searchVal != null) {
-            searchVal = searchVal.toLowerCase();
-        }
-        if (searchFields != null) {
-            searchFields = searchFields.toLowerCase();
-        }
         return filmService.getFilmsSearch(searchVal, searchFields);
     }
 

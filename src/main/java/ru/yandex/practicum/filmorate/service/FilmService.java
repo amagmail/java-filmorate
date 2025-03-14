@@ -80,10 +80,18 @@ public class FilmService {
         if (directorStorage.getItem(directorId) == null) {
             throw new NotFoundException("Режиссера с идентификатором " + directorId + " не существует");
         }
+        sortBy = sortBy.toLowerCase();
+        sortBy = sortBy.replace("year", "release_date");
         return filmStorage.getDirectorFilms(directorId, sortBy);
     }
 
     public Collection<Film> getFilmsSearch(String searchVal, String searchFields) {
+        if (searchVal != null) {
+            searchVal = searchVal.toLowerCase();
+        }
+        if (searchFields != null) {
+            searchFields = searchFields.toLowerCase();
+        }
         return filmStorage.getFilmsSearch(searchVal, searchFields);
     }
 
