@@ -28,25 +28,15 @@ public class ReviewService {
     }
 
     public Review create(Review review) {
-        if (filmStorage.getItem(review.getFilmId()) == null) {
-            throw new NotFoundException("Фильм не найден");
-        }
-        if (userStorage.getItem(review.getUserId()) == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        validateReviewData(null, null, review);
         return reviewStorage.create(review);
     }
 
     public Review update(Review review) {
-        if (filmStorage.getItem(review.getFilmId()) == null) {
-            throw new NotFoundException("Фильм не найден");
-        }
-        if (userStorage.getItem(review.getUserId()) == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
         if (review.getReviewId() == null) {
             throw new ValidationException("Поле id содержит невалидное значение");
         }
+        validateReviewData(null, null, review);
         return reviewStorage.update(review);
     }
 
@@ -55,43 +45,37 @@ public class ReviewService {
     }
 
     public Review addLike(Long reviewId, Long userId) {
-        if (reviewStorage.getItem(reviewId) == null) {
-            throw new ValidationException("Отзыв не найден");
-        }
-        if (userStorage.getItem(userId) == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        validateReviewData(reviewId, userId,null);
         return reviewStorage.addLike(reviewId, userId);
     }
 
     public Review removeLike(Long reviewId, Long userId) {
-        if (reviewStorage.getItem(reviewId) == null) {
-            throw new ValidationException("Отзыв не найден");
-        }
-        if (userStorage.getItem(userId) == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        validateReviewData(reviewId, userId,null);
         return reviewStorage.removeLike(reviewId, userId);
     }
 
     public Review addDislike(Long reviewId, Long userId) {
-        if (reviewStorage.getItem(reviewId) == null) {
-            throw new ValidationException("Отзыв не найден");
-        }
-        if (userStorage.getItem(userId) == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        validateReviewData(reviewId, userId,null);
         return reviewStorage.addDislike(reviewId, userId);
     }
 
     public Review removeDislike(Long reviewId, Long userId) {
-        if (reviewStorage.getItem(reviewId) == null) {
-            throw new ValidationException("Отзыв не найден");
-        }
-        if (userStorage.getItem(userId) == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
+        validateReviewData(reviewId, userId, null);
         return reviewStorage.removeDislike(reviewId, userId);
     }
 
+    private void validateReviewData(Long reviewId, Long userId, Review review) {
+        if (reviewId != null && reviewStorage.getItem(reviewId) == null) {
+            throw new ValidationException("Отзыв не найден");
+        }
+        if (userId != null && userStorage.getItem(userId) == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+        if (review != null && filmStorage.getItem(review.getFilmId()) == null) {
+            throw new NotFoundException("Фильм не найден");
+        }
+        if (review != null && userStorage.getItem(review.getUserId()) == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+    }
 }

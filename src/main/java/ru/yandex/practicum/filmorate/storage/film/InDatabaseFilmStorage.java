@@ -98,6 +98,10 @@ public class InDatabaseFilmStorage implements FilmStorage {
                     "    where user_id = ? " +
                     ")";
 
+    private static final String POPULAR_GROUP = " group by bs.id order by bs.likes desc limit ?";
+    private static final String POPULAR_WHERE_GENRE = "exists(SELECT 1 FROM film_genre fg WHERE fg.film_id = bs.id AND fg.genre_id = ?)";
+    private static final String POPULAR_WHERE_YEAR = "extract(YEAR FROM bs.RELEASE_DATE) = ?";
+
     public InDatabaseFilmStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         this.jdbc = jdbc;
         this.mapper = new FilmRowMapper();
@@ -199,25 +203,25 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
         String whereGenre = "";
         if (genreId != null) {
-            whereGenre = "exists(SELECT 1 FROM film_genre fg WHERE fg.film_id = bs.id AND fg.genre_id = ?)";
+            whereGenre = POPULAR_WHERE_GENRE;
         }
 
         String whereYear = "";
         if (year != null) {
-            whereYear = "extract(YEAR FROM bs.RELEASE_DATE) = ?";
+            whereYear = POPULAR_WHERE_YEAR;
         }
 
         if (!whereGenre.isEmpty() && !whereYear.isEmpty()) {
-            query += " where " + whereGenre + " and " + whereYear + " group by bs.id order by bs.likes desc limit ?";
+            query += " where " + whereGenre + " and " + whereYear + POPULAR_GROUP;
             films = jdbc.query(query, mapper, genreId, year, count);
         } else if (!whereGenre.isEmpty()) {
-            query += " where " + whereGenre + " group by bs.id order by bs.likes desc limit ?";
+            query += " where " + whereGenre + POPULAR_GROUP;
             films = jdbc.query(query, mapper, genreId, count);
         } else if (!whereYear.isEmpty()) {
-            query += " where " + whereYear + " group by bs.id order by bs.likes desc limit ?";
+            query += " where " + whereYear + POPULAR_GROUP;
             films = jdbc.query(query, mapper, year, count);
         } else {
-            query += " group by bs.id order by bs.likes desc limit ?";
+            query += POPULAR_GROUP;
             films = jdbc.query(query, mapper, count);
         }
         return films;
