@@ -56,10 +56,10 @@ public class InDatabaseUserStorage implements UserStorage {
     private static final String ACTUALIZE_FRIENDSHIPS_FALSE = "update friendship set accepted = false " +
             "where user_id = ? and friend_id = ?";
 
-    private static final String REMOVE_USER = "DELETE FROM users WHERE id = ?";
-    private static final String REMOVE_USER_IN_FEED = "DELETE FROM feed WHERE user_id = ?";
+    private static final String REMOVE_USER = "delete from users where id = ?";
+    private static final String REMOVE_USER_IN_FEED = "delete from feed where user_id = ?";
 
-    private static final String CLEAR_FRIENDS = "DELETE FROM friendship WHERE user_id = ? or friend_id = ?";
+    private static final String CLEAR_FRIENDS = "delete from friendship where user_id = ? or friend_id = ?";
 
     private static final String GET_FEED = "select * from feed where user_id = ?";
 

@@ -65,37 +65,37 @@ public class InDatabaseFilmStorage implements FilmStorage {
     private static final String SET_DIRECTOR = "insert into film_director(film_id, director_id) values(?, ?)";
     private static final String REMOVE_DIRECTORS = "delete from film_director where film_id = ?";
 
-    private static final String REMOVE_FILM = "DELETE FROM films WHERE id = ?";
-    private static final String CLEAR_LIKES = "DELETE FROM likes WHERE film_id = ?";
-    private static final String CLEAR_FILM_GENRE = "DELETE FROM film_genre WHERE film_id = ? ";
-    private static final String GET_COMMON_FILMS_QUERY = "SELECT f.*, " +
-            "g.id AS genre_id, g.name AS genre_name, " +
-            "m.name AS mpa_name, m.id AS mpa_id, " +
-            "(SELECT COUNT(film_id) FROM likes AS l WHERE l.film_id = f.id) AS likes " +
-            "FROM films AS f " +
-            "LEFT JOIN film_genre AS fg ON f.id = fg.film_id " +
-            "LEFT JOIN genres AS g ON fg.genre_id = g.id " +
-            "LEFT JOIN likes AS l1 ON f.id = l1.film_id " +
-            "LEFT JOIN likes AS l2 ON f.id = l2.film_id " +
-            "LEFT JOIN mpa AS m ON f.mpa = m.id " +
-            "WHERE l1.user_id = ? AND l2.user_id = ? " +
-            "ORDER BY likes DESC";
+    private static final String REMOVE_FILM = "delete from films where id = ?";
+    private static final String CLEAR_LIKES = "delete from likes where film_id = ?";
+    private static final String CLEAR_FILM_GENRE = "delete from film_genre where film_id = ? ";
+    private static final String GET_COMMON_FILMS_QUERY = "select f.*, " +
+            "g.id as genre_id, g.name as genre_name, " +
+            "m.name as mpa_name, m.id as mpa_id, " +
+            "(select count(film_id) from likes as l where l.film_id = f.id) as likes " +
+            "from films as f " +
+            "left join film_genre as fg on f.id = fg.film_id " +
+            "left join genres as g on fg.genre_id = g.id " +
+            "left join likes as l1 on f.id = l1.film_id " +
+            "left join likes as l2 on f.id = l2.film_id " +
+            "left join mpa as m on f.mpa = m.id " +
+            "where l1.user_id = ? and l2.user_id = ? " +
+            "order by likes desc";
 
     private static final String FIND_SIMILAR_USERS =
-            "SELECT l2.user_id AS similar_user_id, COUNT(*) AS common_likes " +
-                    "FROM likes l1 " +
-                    "JOIN likes l2 ON l1.film_id = l2.film_id " +
-                    "WHERE l1.user_id = ? AND l2.user_id != ? " +
-                    "GROUP BY l2.user_id " +
-                    "ORDER BY common_likes DESC " +
-                    "LIMIT 10";
+            "select l2.user_id as similar_user_id, count(*) as common_likes " +
+                    "from likes l1 " +
+                    "join likes l2 on l1.film_id = l2.film_id " +
+                    "where l1.user_id = ? and l2.user_id != ? " +
+                    "group by l2.user_id " +
+                    "order by common_likes desc " +
+                    "limit 10";
     private static final String FIND_FILMS_LIKED_BY_USER_BUT_NOT_TARGET =
-            "SELECT l.film_id " +
-                    "FROM likes l " +
-                    "WHERE l.user_id = ? AND l.film_id NOT IN ( " +
-                    "    SELECT film_id " +
-                    "    FROM likes " +
-                    "    WHERE user_id = ? " +
+            "select l.film_id " +
+                    "from likes l " +
+                    "where l.user_id = ? and l.film_id not in ( " +
+                    "    select film_id " +
+                    "    from likes " +
+                    "    where user_id = ? " +
                     ")";
 
     public InDatabaseFilmStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
