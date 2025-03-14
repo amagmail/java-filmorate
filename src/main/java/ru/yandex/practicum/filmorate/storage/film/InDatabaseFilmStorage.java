@@ -28,7 +28,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
     private final JdbcTemplate jdbc;
     private final RowMapper<Film> mapper;
-    private final RowMapper<List<Film>> listMapper;
+    private final RowMapper<Collection<Film>> listMapper;
 
     private static final String BASE_DATA_QUERY = "select bs.*, " +
             "string_agg(directors.id, ', ') as director_ids, " +
@@ -166,11 +166,11 @@ public class InDatabaseFilmStorage implements FilmStorage {
 
     @Override
     public Film getItem(Long filmId) {
-        List<Film> films = jdbc.query(GET_ITEM, mapper, filmId);
+        Collection<Film> films = jdbc.query(GET_ITEM, mapper, filmId);
         if (films.isEmpty()) {
             throw new NotFoundException("Не удалось фильм по идентификатору");
         }
-        return films.getFirst();
+        return films.iterator().next();
     }
 
     @Override
@@ -314,7 +314,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getCommonFilms(Long userId, Long friendId) {
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
         if (userId == null || friendId == null) {
             throw new ValidationException("ID пользователя пуст. Введите значение и повторите попытку.");
         }

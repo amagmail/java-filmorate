@@ -29,5 +29,5 @@ public interface FilmStorage extends Storage<Film> {
 
     Collection<Film> getFilmsByIds(List<Long> filmIds);
 
-    List<Film> getCommonFilms(Long userId, Long friendId);
+    Collection<Film> getCommonFilms(Long userId, Long friendId);
 }

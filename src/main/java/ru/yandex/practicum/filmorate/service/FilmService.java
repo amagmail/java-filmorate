@@ -99,7 +99,7 @@ public class FilmService {
         return filmStorage.removeFilm(filmId);
     }
 
-    public List<Film> getCommonFilms(Long userId, Long friendId) {
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
         return filmStorage.getCommonFilms(userId, friendId);
     }
 }
