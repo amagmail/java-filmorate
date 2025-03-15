@@ -2,6 +2,8 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -101,4 +103,25 @@ public class InMemoryUserStorage implements UserStorage {
         return ++currentMaxId;
     }
 
+    @Override
+    public User removeUser(Long userId) {
+        if (userId == null) {
+            throw new ValidationException("ID пользователя пуст. Введите значение и повторите попытку.");
+        }
+        if (!users.containsKey(userId)) {
+            throw new NotFoundException("Пользователь с ID: " + userId + " не найден!");
+        }
+        return users.remove(userId);
+    }
+
+    @Override
+    public void clearAllFriends(Long userId) {
+        User user1 = getItem(userId);
+        user1.getFriends().clear();
+    }
+
+    @Override
+    public Collection<Feed> getFeed(Long userId) {
+        return null;
+    }
 }

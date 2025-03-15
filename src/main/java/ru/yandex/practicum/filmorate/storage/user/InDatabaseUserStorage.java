@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -7,13 +8,20 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Feed;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.mappers.FeedRowMapper;
 import ru.yandex.practicum.filmorate.utils.DatabaseUtils;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+@Slf4j
 @Primary
 @Component
 public class InDatabaseUserStorage implements UserStorage {
@@ -48,6 +56,13 @@ public class InDatabaseUserStorage implements UserStorage {
     private static final String ACTUALIZE_FRIENDSHIPS_FALSE = "update friendship set accepted = false " +
             "where user_id = ? and friend_id = ?";
 
+    private static final String REMOVE_USER = "delete from users where id = ?";
+    private static final String REMOVE_USER_IN_FEED = "delete from feed where user_id = ?";
+
+    private static final String CLEAR_FRIENDS = "delete from friendship where user_id = ? or friend_id = ?";
+
+    private static final String GET_FEED = "select * from feed where user_id = ?";
+
     public InDatabaseUserStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
         this.jdbc = jdbc;
         this.mapper = mapper;
@@ -62,8 +77,8 @@ public class InDatabaseUserStorage implements UserStorage {
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS);
             ps.setObject(1, entity.getName());
-            ps.setObject(2, entity.getLogin());
-            ps.setObject(3, entity.getEmail());
+            ps.setObject(2, entity.getEmail());
+            ps.setObject(3, entity.getLogin());
             ps.setObject(4, entity.getBirthday());
             return ps;
         }, keyHolder);
@@ -78,7 +93,7 @@ public class InDatabaseUserStorage implements UserStorage {
 
     @Override
     public User update(User entity) {
-        int rowsUpdated = jdbc.update(UPDATE_QUERY, entity.getName(), entity.getLogin(), entity.getEmail(), entity.getBirthday(), entity.getId());
+        int rowsUpdated = jdbc.update(UPDATE_QUERY, entity.getName(), entity.getEmail(), entity.getLogin(), entity.getBirthday(), entity.getId());
         if (rowsUpdated > 0) {
             return entity;
         } else {
@@ -93,7 +108,11 @@ public class InDatabaseUserStorage implements UserStorage {
 
     @Override
     public User getItem(Long userId) {
-        return jdbc.queryForObject(GET_ITEM, mapper, userId);
+        Collection<User> users = jdbc.query(GET_ITEM, mapper, userId);
+        if (users.isEmpty()) {
+            throw new NotFoundException("Не удалось найти пользователя по идентификатору");
+        }
+        return users.iterator().next();
     }
 
     @Override
@@ -107,6 +126,7 @@ public class InDatabaseUserStorage implements UserStorage {
             int rowsUpdated = jdbc.update(SET_FRIEND, userId, friendId);
             if (rowsUpdated > 0) {
                 friends.add(friendId);
+                DatabaseUtils.addDataToFeed(jdbc, userId, "FRIEND", "ADD", friendId);
                 jdbc.update(ACTUALIZE_FRIENDSHIPS_TRUE, userId, friendId, friendId, userId, userId, friendId, friendId, userId);
             }
         }
@@ -121,6 +141,7 @@ public class InDatabaseUserStorage implements UserStorage {
         }
         int rowsUpdated = jdbc.update(REMOVE_FRIEND, userId, friendId);
         if (rowsUpdated > 0) {
+            DatabaseUtils.addDataToFeed(jdbc, userId, "FRIEND", "REMOVE", friendId);
             jdbc.update(ACTUALIZE_FRIENDSHIPS_FALSE, friendId, userId);
         }
         return getFriends(userId);
@@ -143,6 +164,30 @@ public class InDatabaseUserStorage implements UserStorage {
     public Set<Long> getFriends(Long userId) {
         List<Long> userIds = jdbc.queryForList(GET_FRIENDS, Long.class, userId);
         return new HashSet<>(userIds);
+    }
+
+    @Override
+    public User removeUser(Long userId) {
+        clearAllFriends(userId);
+        log.info("Будем удалять пользователя по ID: {}", userId);
+        if (userId == null) {
+            throw new ValidationException("ID пользователя пуст. Введите значение и повторите попытку.");
+        }
+        User user = getItem(userId);
+        jdbc.update(REMOVE_USER_IN_FEED, userId);
+        jdbc.update(REMOVE_USER, userId);
+        log.info("Удален пользователь({}) по ID: {}", user, userId);
+        return user;
+    }
+
+    @Override
+    public void clearAllFriends(Long userId) {
+        jdbc.update(CLEAR_FRIENDS, userId, userId);
+    }
+
+    @Override
+    public Collection<Feed> getFeed(Long userId) {
+        return jdbc.query(GET_FEED, new FeedRowMapper(), userId);
     }
 
 }
