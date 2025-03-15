@@ -199,7 +199,7 @@ public class InDatabaseFilmStorage implements FilmStorage {
     public Collection<Film> getPopular(int count, Long genreId, Integer year) {
 
         Collection<Film> films;
-        String query = BASE_DATA_QUERY;
+        StringBuilder queryBuild = new StringBuilder(BASE_DATA_QUERY);
 
         String whereGenre = "";
         if (genreId != null) {
@@ -212,17 +212,25 @@ public class InDatabaseFilmStorage implements FilmStorage {
         }
 
         if (!whereGenre.isEmpty() && !whereYear.isEmpty()) {
-            query += " where " + whereGenre + " and " + whereYear + POPULAR_GROUP;
-            films = jdbc.query(query, mapper, genreId, year, count);
+            queryBuild.append(" where ");
+            queryBuild.append(whereGenre);
+            queryBuild.append(" and ");
+            queryBuild.append(whereYear);
+            queryBuild.append(POPULAR_GROUP);
+            films = jdbc.query(queryBuild.toString(), mapper, genreId, year, count);
         } else if (!whereGenre.isEmpty()) {
-            query += " where " + whereGenre + POPULAR_GROUP;
-            films = jdbc.query(query, mapper, genreId, count);
+            queryBuild.append(" where ");
+            queryBuild.append(whereGenre);
+            queryBuild.append(POPULAR_GROUP);
+            films = jdbc.query(queryBuild.toString(), mapper, genreId, count);
         } else if (!whereYear.isEmpty()) {
-            query += " where " + whereYear + POPULAR_GROUP;
-            films = jdbc.query(query, mapper, year, count);
+            queryBuild.append(" where ");
+            queryBuild.append(whereYear);
+            queryBuild.append(POPULAR_GROUP);
+            films = jdbc.query(queryBuild.toString(), mapper, year, count);
         } else {
-            query += POPULAR_GROUP;
-            films = jdbc.query(query, mapper, count);
+            queryBuild.append(POPULAR_GROUP);
+            films = jdbc.query(queryBuild.toString(), mapper, count);
         }
         return films;
     }
